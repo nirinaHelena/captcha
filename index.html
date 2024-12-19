@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forbidden Sequence</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #form-container, #captcha-container {
+            margin-bottom: 20px;
+        }
+        #result {
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+    </style>
+    <script type="text/javascript" src="https://b82b1763d1c3.ef7ef6cc.eu-west-3.captcha.awswaf.com/b82b1763d1c3/jsapi.js" defer></script>
+</head>
+<body>
+
+    <div id="form-container">
+        <h1>Entrez un nombre N (entre 1 et 1000)</h1>
+        <form id="number-form">
+            <input type="number" id="number-input" min="1" max="1000" required>
+            <button type="submit">Soumettre</button>
+        </form>
+    </div>
+
+    <div id="captcha-container" style="display: none;">
+        <h2>Un CAPTCHA est requis pour continuer</h2>
+        <p>Veuillez résoudre le CAPTCHA ci-dessous :</p>
+        <div id="my-captcha-container">
+            <!-- Le widget CAPTCHA sera rendu ici -->
+        </div>
+    </div>
+
+    <div id="result"></div>
+
+    <script type="text/javascript">
+        const form = document.getElementById("number-form");
+        const numberInput = document.getElementById("number-input");
+        const resultContainer = document.getElementById("result");
+        const captchaContainer = document.getElementById("captcha-container");
+
+        let continueSequence = true; // Variable pour gérer la pause/reprise de la séquence
+        
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const N = parseInt(numberInput.value);
+            resultContainer.textContent = '';
+            continueSequence = true;
+            await generateSequence(N);
+        });
+
+        async function generateSequence(N) {
+            for (let i = 1; i <= N; i++) {
+                if (!continueSequence) {
+                    // Attend que la variable soit réinitialisée par le CAPTCHA
+                    await new Promise(resolve => {
+                        const interval = setInterval(() => {
+                            if (continueSequence) {
+                                clearInterval(interval);
+                                resolve();
+                            }
+                        }, 500);
+                    });
+                }
+
+                await makeRequest(i);
+                if (i < N) await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        async function makeRequest(i) {
+            try {
+                const response = await fetch("https://api.prod.jcloudify.com/whoami");
+
+                if (response.status === 403) {
+                    resultContainer.textContent += `Ligne ${i}: Forbidden\n`;
+                } else if (response.status === 405) {
+                    resultContainer.textContent += `Ligne ${i}: CAPTCHA requis...\n`;
+                    await handleCaptcha();
+                } else {
+                    resultContainer.textContent += `Ligne ${i}: Succès\n`;
+                }
+            } catch (error) {
+                resultContainer.textContent += `Ligne ${i}: Erreur lors de l'appel API\n`;
+            }
+        }
+
+        async function handleCaptcha() {
+            captchaContainer.style.display = "block";
+            continueSequence = false; // Pause la séquence
+
+            await new Promise(resolve => {
+                const container = document.querySelector("#my-captcha-container");
+
+                AwsWafCaptcha.renderCaptcha(container, {
+                    apiKey: "...API key goes here...", // Remplacez par votre clé API
+                    onSuccess: (wafToken) => {
+                        resolveCaptcha(wafToken, resolve);
+                    },
+                    onError: (error) => {
+                        console.error("Erreur CAPTCHA: ", error);
+                        alert("Erreur lors de la résolution du CAPTCHA. Veuillez réessayer.");
+                    },
+                });
+            });
+        }
+
+        function resolveCaptcha(wafToken, resolve) {
+            captchaContainer.style.display = "none";
+            continueSequence = true; // Reprend la séquence
+            resolve();
+        }
+    </script>
+</body>
+</html>
