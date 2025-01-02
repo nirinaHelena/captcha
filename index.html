@@ -40,6 +40,9 @@
     <div id="result"></div>
 
     <script type="text/javascript">
+        // Charger les variables d'environnement
+        require('dotenv').config();
+
         const form = document.getElementById("number-form");
         const numberInput = document.getElementById("number-input");
         const resultContainer = document.getElementById("result");
@@ -99,7 +102,7 @@
                 const container = document.querySelector("#my-captcha-container");
 
                 AwsWafCaptcha.renderCaptcha(container, {
-                    apiKey: "...API key goes here...", // Remplacez par votre clé API
+                    apiKey: process.env.API_KEY, 
                     onSuccess: (wafToken) => {
                         resolveCaptcha(wafToken, resolve);
                     },

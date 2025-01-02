@@ -1,5 +1,25 @@
 {
   "dependencies": {
-    "dotenv": "^16.4.7"
-  }
+    "dotenv": "^16.4.7",
+    "http-server": "^14.1.1"
+  },
+  "name": "captcha",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nirinaHelena/captcha.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/nirinaHelena/captcha/issues"
+  },
+  "homepage": "https://github.com/nirinaHelena/captcha#readme",
+  "description": ""
 }
